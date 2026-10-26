@@ -1,0 +1,35 @@
+# Local test environment: Grafana OSS + MongoDB + a generator writing fresh sensor data.
+# Build the plugin into ../dist first, then: docker compose -f dev/docker-compose.yaml up -d
+services:
+  mongo:
+    image: mongo:7
+    ports:
+      - 27017:27017
+    volumes:
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+
+  # Inserts one reading per sensor every 10 seconds so alert rules have live data to evaluate.
+  # sensor 2 runs "hot" (values around 90) to trigger a threshold alert.
+  generator:
+    image: mongo:7
+    depends_on:
+      - mongo
+    restart: unless-stopped
+    volumes:
+      - ./generator.js:/generator.js:ro
+    command: ["mongosh", "--quiet", "mongodb://mongo:27017/test", "/generator.js"]
+
+  grafana:
+    image: grafana/grafana-oss:${GRAFANA_VERSION:-latest}
+    depends_on:
+      - mongo
+    ports:
+      - 3000:3000
+    environment:
+      GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: meln5674-mongodb-community
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_LOG_FILTERS: plugin.meln5674-mongodb-community:debug
+    volumes:
+      - ../dist:/var/lib/grafana/plugins/meln5674-mongodb-community
+      - ./provisioning:/etc/grafana/provisioning

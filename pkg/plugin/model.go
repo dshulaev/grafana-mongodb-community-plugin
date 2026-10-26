@@ -2,6 +2,8 @@ package plugin
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -272,12 +274,42 @@ func (m *timeseriesQueryModel) getValues(doc timestepDocument) ([]interface{}, e
 	return values, nil
 }
 
+var macroPattern = regexp.MustCompile(`\$(?:\{__(from|to|interval_ms)\}|__(from|to|interval_ms)\b)`)
+
+// ApplyMacros substitutes Grafana's built-in time macros ($__from, $__to, $__interval_ms
+// and their ${...} forms) with their numeric values in milliseconds.
+// In dashboards the frontend replaces these before the query reaches the backend, but
+// alert rules are evaluated entirely server-side, so the backend must do it itself.
+func ApplyMacros(s string, from time.Time, to time.Time, interval time.Duration) string {
+	return macroPattern.ReplaceAllStringFunc(s, func(match string) string {
+		groups := macroPattern.FindStringSubmatch(match)
+		name := groups[1]
+		if name == "" {
+			name = groups[2]
+		}
+		switch name {
+		case "from":
+			return strconv.FormatInt(from.UnixMilli(), 10)
+		case "to":
+			return strconv.FormatInt(to.UnixMilli(), 10)
+		default:
+			return strconv.FormatInt(interval.Milliseconds(), 10)
+		}
+	})
+}
+
+func (m *QueryModel) applyMacros(from time.Time, to time.Time, interval time.Duration) {
+	m.Database = ApplyMacros(m.Database, from, to, interval)
+	m.Collection = ApplyMacros(m.Collection, from, to, interval)
+	m.Aggregation = ApplyMacros(m.Aggregation, from, to, interval)
+}
+
 func (m *QueryModel) getFields() ([]field, error) {
-	if len(m.ValueFields) != len(m.ValueFields) {
+	if len(m.ValueFields) != len(m.ValueFieldTypes) {
 		return nil, fmt.Errorf(
 			"Value Fields and Value Field Types must be the same length (%d vs %d)",
 			len(m.ValueFields),
-			len(m.ValueFields),
+			len(m.ValueFieldTypes),
 		)
 	}
 	fields := make([]field, len(m.ValueFields))

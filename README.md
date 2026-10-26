@@ -91,6 +91,26 @@ export INTEGRATION_TEST_DEV_MODE=
 yarn integration-test
 ```
 
+## Alerting
+
+The plugin supports Grafana Alerting (unified alerting). Alert rules are evaluated by the Grafana server without a browser, so keep these points in mind:
+
+* Use the **Timeseries** query type with numeric value fields (e.g. `int64`, `float64`). Each unique combination of label fields becomes a separate alert instance, and the label fields become alert labels.
+* Reduce the series with a **Reduce** expression (e.g. `Last`, `Mean`) and compare it with a **Threshold** expression.
+* Enable **Auto Time Bound** (or filter on time yourself) so the rule only looks at the evaluation window.
+* The built-in macros `$__from`, `$__to` and `$__interval_ms` (and their `${...}` forms) are substituted by the backend as milliseconds since epoch, so they also work in alert rules, e.g. `{"$match": {"timestamp": {"$gte": {"$date": $__from}}}}`. Dashboard template variables are not available in alert rules.
+* An empty result produces the rule's configured **No Data** state.
+
+### Local test environment
+
+`dev/docker-compose.yaml` starts Grafana OSS, MongoDB with a `test.weather` collection, and a generator inserting fresh readings every 10 seconds (sensor 2 runs hot, so a `> 80` threshold fires). Build the plugin into `dist/`, then run:
+
+```bash
+docker compose -f dev/docker-compose.yaml up -d
+```
+
+Grafana is at http://localhost:3000 (admin/admin) with the MongoDB datasource already provisioned.
+
 ## Limitations
 
 * Only `aggregate` queries are supported, but you can emulate find() et al using various pipeline stages. Supporting find would likely require implementing a graphical query editor to prevent fragility.

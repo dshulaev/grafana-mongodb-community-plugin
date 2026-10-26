@@ -155,6 +155,8 @@ func (d *MongoDBDatasource) query(ctx context.Context, pCtx backend.PluginContex
 		return response
 	}
 
+	qm.applyMacros(query.TimeRange.From, query.TimeRange.To, query.Interval)
+
 	log.DefaultLogger.Debug("Query Model Parsed", "QueryModel", qm)
 
 	pipeline, err := qm.getPipeline(query.TimeRange.From, query.TimeRange.To)

@@ -5,6 +5,7 @@
   "id": "meln5674-mongodb-community",
   "metrics": true,
   "backend": true,
+  "alerting": true,
   "executable": "gpx_mongodb-community",
   "info": {
     "description": "Community-supported MongoDB Datasource Plugin",
