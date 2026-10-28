@@ -1,6 +1,6 @@
 {
   "name": "meln5674-mongodb-community",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Community-supported MongoDB Datasource Plugin",
   "scripts": {
     "backend": "go vet ./... && mage -v",
