@@ -1,4 +1,4 @@
-﻿# Grafana Community MongoDB Plugin
+# Grafana Community MongoDB Plugin
 
 This Open Source Grafana plugin allows for querying a MongoDB database or cluster.
 
