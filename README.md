@@ -1,4 +1,4 @@
-# Grafana Community MongoDB Plugin
+﻿# Grafana Community MongoDB Plugin
 
 This Open Source Grafana plugin allows for querying a MongoDB database or cluster.
 
@@ -6,6 +6,8 @@ This Open Source Grafana plugin allows for querying a MongoDB database or cluste
 
 
 ## Installation
+
+**Пошаговая инструкция на русском: [INSTALL.md](./INSTALL.md)**
 
 
 This plugin is not currently signed. To install it, you have two options: Sign it yourself, or whitelist it as an unsigned plugin.
